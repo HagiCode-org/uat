@@ -1,0 +1,82 @@
+name: UAT Playwright
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: Override UAT base URL
+        required: false
+        type: string
+  pull_request:
+    paths:
+      - '.github/workflows/uat-playwright.yml'
+      - 'playwright.config.ts'
+      - 'tests/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'README.md'
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/uat-playwright.yml'
+      - 'playwright.config.ts'
+      - 'tests/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'README.md'
+  schedule:
+    - cron: '0 */4 * * *'
+
+concurrency:
+  group: uat-playwright-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  uat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CI: true
+      FORCE_COLOR: '1'
+      PLAYWRIGHT_HTML_OPEN: never
+      UAT_BASE_URL: ${{ inputs.base_url || vars.UAT_BASE_URL || secrets.UAT_BASE_URL }}
+    steps:
+      - name: Checkout UAT repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Ensure Xvfb
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Run UAT tests
+        run: xvfb-run -a npm test -- --headed --project=chromium
+
+      - name: Upload Playwright artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: ignore
+          retention-days: 14
