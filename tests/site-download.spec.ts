@@ -3,11 +3,14 @@ import { expect, test, type Download, type Locator, type Page } from '@playwrigh
 const segmentedControlSelector = '[data-action-group="segmented"]';
 const primaryActionGroupSelector = '[data-segment-role="primary-actions"]';
 const primaryActionLinkSelector = `${primaryActionGroupSelector} a[href]`;
-const toggleSelector = '[data-segment-role="toggle"][aria-haspopup="menu"]';
-const menuItemSelector = '[role="menuitem"][href]';
+// The header toggle opens a platform/package picker exposed as a dialog
+// (see repos/site InstallButton.tsx), not an ARIA menu.
+const toggleSelector = '[data-segment-role="toggle"][aria-haspopup="dialog"]';
+const dialogActionSelector = 'a[href]';
 
-const toggleButtonNamePattern = /Choose other versions|选择其他版本/i;
-const menuNamePattern = /Choose download version|选择下载版本/i;
+const toggleButtonNamePattern = /Choose platform and package|选择下载平台和安装包/i;
+const dialogNamePattern = /Download Desktop|下载桌面版/i;
+const localizedHomePattern = /^https?:\/\/[^/]+\/[a-z]{2}(?:-[A-Za-z]+)?\/?$/;
 const relativeDesktopPagePattern = /^\/(?:en\/|zh-CN\/)?desktop\/?$/i;
 const desktopPagePattern = /^https?:\/\/[^/]+\/(?:en\/|zh-CN\/)?desktop\/?$/i;
 const desktopHistoryPattern = /^https?:\/\/index\.hagicode\.com\/desktop\/history\/?$/i;
@@ -96,7 +99,7 @@ async function locateHeaderDownloadControl(page: Page): Promise<{
 
   const toggle = control.locator(toggleSelector).first();
   await expect(toggle).toBeVisible();
-  await expect(toggle).toHaveAttribute('aria-haspopup', 'menu');
+  await expect(toggle).toHaveAttribute('aria-haspopup', 'dialog');
   await expect(toggle).toHaveAttribute('aria-label', toggleButtonNamePattern);
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
 
@@ -176,8 +179,8 @@ async function waitForPrimaryOutcome(page: Page, primaryAction: Locator): Promis
   throw new Error(`Primary action did not trigger a desktop download or a supported fallback page. Current URL: ${page.url()}`);
 }
 
-async function findSupportedMenuAction(menu: Locator): Promise<{ item: Locator; href: string } | null> {
-  const items = menu.locator(menuItemSelector);
+async function findSupportedDialogAction(dialog: Locator): Promise<{ item: Locator; href: string } | null> {
+  const items = dialog.locator(dialogActionSelector);
   const count = await items.count();
 
   for (let index = 0; index < count; index += 1) {
@@ -195,19 +198,19 @@ async function assertDropdownActions(page: Page, toggle: Locator): Promise<void>
   await toggle.click();
   await expect(toggle).toHaveAttribute('aria-expanded', 'true');
 
-  const menu = page.getByRole('menu', { name: menuNamePattern });
-  await expect(menu).toBeVisible();
+  const dialog = page.getByRole('dialog', { name: dialogNamePattern });
+  await expect(dialog).toBeVisible();
 
   await expect
     .poll(async () => {
-      const supportedItem = await findSupportedMenuAction(menu);
+      const supportedItem = await findSupportedDialogAction(dialog);
       return Boolean(supportedItem);
     }, {
-      message: '下载菜单应至少暴露一个可执行的备用下载或回退入口',
+      message: '下载弹层应至少暴露一个可执行的备用下载或回退入口',
     })
     .toBe(true);
 
-  const supportedItem = await findSupportedMenuAction(menu);
+  const supportedItem = await findSupportedDialogAction(dialog);
   expect(supportedItem).not.toBeNull();
   await expect(supportedItem!.item).toBeVisible();
   expect(supportedItem!.href).not.toBe('');
@@ -216,13 +219,16 @@ async function assertDropdownActions(page: Page, toggle: Locator): Promise<void>
 test.describe('Hagicode 官网下载入口', () => {
   test('首页 header 下载控件符合当前分段按钮契约', async ({ page }) => {
     await gotoWithRetry(page, '/');
+    // The site root is a language-routing landing page that redirects to a
+    // localized home page; wait for it before looking for the header control.
+    await page.waitForURL((url) => localizedHomePattern.test(url.toString()), { timeout: 20_000 });
 
     const { primaryAction, toggle } = await locateHeaderDownloadControl(page);
 
     await assertDropdownActions(page, toggle);
 
     await page.keyboard.press('Escape');
-    await expect(page.getByRole('menu', { name: menuNamePattern })).toBeHidden();
+    await expect(page.getByRole('dialog', { name: dialogNamePattern })).toBeHidden();
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');
 
     await waitForPrimaryOutcome(page, primaryAction);
