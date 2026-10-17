@@ -1,5 +1,7 @@
 # HagiCode UAT
 
+[![last commit](https://img.shields.io/github/last-commit/HagiCode-org/uat)](https://github.com/HagiCode-org/uat/commits/main)
+
 HagiCode 的用户验收测试仓库。
 
 当前首条验收用例：
