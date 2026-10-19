@@ -25,9 +25,10 @@ UAT_BASE_URL=<url> npm test   # override target, default https://hagicode.com
 
 ## Key Paths
 
-- `tests/`: Playwright test specs
-- `playwright.config.ts`: Playwright configuration (`UAT_BASE_URL` sets the target site)
-- `.github/workflows/uat-playwright.yml`: CI run (Node 24, headed Chromium under xvfb, every 4 hours plus on changes)
+- `tests/`: Playwright test specs (currently `site-download.spec.ts`, the site download entry coverage)
+- `playwright.config.ts`: Playwright configuration (`UAT_BASE_URL` sets the target site; single `chromium` project; in CI 2 retries, 2 workers, trace/video kept on failure)
+- `.github/workflows/uat-playwright.yml`: CI run (Node 24, headed Chromium under xvfb, every 4 hours plus on changes to tests/config; manual runs accept a `base_url` input, otherwise `UAT_BASE_URL` var/secret)
+- `playwright-report/`, `test-results/`, `blob-report/`: generated output, gitignored; do not commit
 
 ## Agent Guidelines
 
