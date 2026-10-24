@@ -14,8 +14,6 @@ HagiCode 的用户验收测试仓库。
   - 直接触发 Hagicode Desktop 安装包下载
   - 跳转到官网 `Desktop` 页面或 `Index` 版本历史页作为回退
 
-该用例需要与 `repos/site/src/components/home/InstallButton.tsx` 的当前实现保持对齐；如果官网下载控件结构、菜单语义或回退策略发生变化，UAT 断言也要同步更新。
-
 ## 本地运行
 
 ```bash
