@@ -13,7 +13,7 @@ on:
       - 'playwright.config.ts'
       - 'tests/**'
       - 'package.json'
-      - 'package-lock.json'
+      - 'pnpm-lock.yaml'
       - 'README.md'
   push:
     branches:
@@ -23,7 +23,7 @@ on:
       - 'playwright.config.ts'
       - 'tests/**'
       - 'package.json'
-      - 'package-lock.json'
+      - 'pnpm-lock.yaml'
       - 'README.md'
   schedule:
     - cron: '0 */4 * * *'
@@ -48,17 +48,28 @@ jobs:
       - name: Checkout UAT repository
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: npm
+          cache: pnpm
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify install and lockfile stability
+        run: |
+          test -d node_modules
+          git diff --exit-code -- pnpm-lock.yaml
+
+      - name: Registry neutrality
+        run: pnpm run check:registry
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: pnpm exec playwright install --with-deps chromium
 
       - name: Ensure Xvfb
         run: |
@@ -68,7 +79,7 @@ jobs:
           fi
 
       - name: Run UAT tests
-        run: xvfb-run -a npm test -- --headed --project=chromium
+        run: xvfb-run -a pnpm test -- --headed --project=chromium
 
       - name: Upload Playwright artifacts
         if: ${{ always() }}
