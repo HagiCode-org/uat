@@ -7,9 +7,12 @@
     "playwright:install": "playwright install chromium",
     "test": "playwright test",
     "test:headed": "playwright test --headed --project=chromium",
-    "test:ui": "playwright test --ui"
+    "test:ui": "playwright test --ui",
+    "check:registry": "node scripts/check-registry-neutrality.mjs",
+    "test:registry": "node --test scripts/check-registry-neutrality.node-test.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2"
-  }
+  },
+  "packageManager": "pnpm@12.16.1"
 }

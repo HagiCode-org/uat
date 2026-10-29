@@ -1,0 +1,7 @@
+# pnpm settings (pnpm 12 reads these here, not from package.json).
+
+# Dependency lifecycle scripts run only for approved packages. Reviewed from the old lockfile's
+# `hasInstallScript` entries:
+#   fsevents - macOS-only optional file watcher; ships a prebuilt binary, no script needed.
+allowBuilds:
+  fsevents: false
