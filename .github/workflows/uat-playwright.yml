@@ -79,7 +79,7 @@ jobs:
           fi
 
       - name: Run UAT tests
-        run: xvfb-run -a pnpm test -- --headed --project=chromium
+        run: xvfb-run -a pnpm run test:headed
 
       - name: Upload Playwright artifacts
         if: ${{ always() }}
