@@ -17,15 +17,15 @@ HagiCode 的用户验收测试仓库。
 ## 本地运行
 
 ```bash
-npm install
-npm run playwright:install
-npm run test
+pnpm install
+pnpm run playwright:install
+pnpm run test
 ```
 
 只运行首页下载场景：
 
 ```bash
-npm test -- tests/site-download.spec.ts --project=chromium
+pnpm test -- tests/site-download.spec.ts --project=chromium
 ```
 
 ## 环境变量

@@ -15,12 +15,12 @@ Run commands from `repos/uat/`.
 ## Key Commands
 
 ```bash
-npm install
-npm run playwright:install
-npm test
-npm run test:headed
-npm run test:ui
-UAT_BASE_URL=<url> npm test   # override target, default https://hagicode.com
+pnpm install
+pnpm run playwright:install
+pnpm test
+pnpm run test:headed
+pnpm run test:ui
+UAT_BASE_URL=<url> pnpm test   # override target, default https://hagicode.com
 ```
 
 ## Key Paths
@@ -40,3 +40,10 @@ UAT_BASE_URL=<url> npm test   # override target, default https://hagicode.com
 ## References
 
 - `README.md`
+
+## Package management
+
+- The repository uses pnpm, pinned in `package.json` `packageManager`. Run `corepack enable` once, then `pnpm install`. `pnpm-lock.yaml` is the only lockfile; do not commit `package-lock.json`.
+- Settings live in `pnpm-workspace.yaml`. `allowBuilds` lists the dependencies whose install scripts may run (reviewed individually, `false` means reviewed and denied); review any new dependency that has an install script and add it there.
+- A local registry mirror belongs in `~/.npmrc` only. Never commit a `registry=` line or a mirror URL; `pnpm run check:registry` (also run in CI) fails on any non-`registry.npmjs.org` `tarball` in the lockfile and on mirror hosts in tracked files.
+- Undeclared imports fail under pnpm's strict layout: declare the package instead of hoisting it.
